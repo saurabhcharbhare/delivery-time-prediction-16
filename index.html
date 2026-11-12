@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delivery Time Prediction | Saurabh Charbhare</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:#f2f3f5;color:#222}
+header{background:#1f2a44;color:#fff;padding:18px 16px}header h1{margin:0;font-size:1.35rem;font-weight:600}
+header p{margin:4px 0 0;font-size:.85rem;color:#c9d1e3}
+main{max-width:920px;margin:18px auto;padding:0 14px;display:flex;flex-wrap:wrap;gap:16px}
+section{background:#fff;border:1px solid #dcdfe4;border-radius:6px;padding:16px;flex:1 1 320px}
+.full{flex:1 1 100%}h2{font-size:1rem;margin:0 0 10px;padding-bottom:8px;border-bottom:2px solid #f26b21}
+label{display:block;font-size:.82rem;color:#555;margin:10px 0 3px}
+input,select{width:100%;padding:9px;font-size:.95rem;border:1px solid #bfc4cc;border-radius:4px;background:#fff}
+button{margin-top:14px;width:100%;padding:11px;font-size:.95rem;background:#f26b21;color:#fff;border:0;border-radius:4px}
+.res{text-align:center;padding:14px 0}.res b{display:block;font-size:2.4rem;color:#1f2a44}.res span{font-size:.85rem;color:#666}
+.err{color:#b00020;font-size:.85rem}table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{border:1px solid #dcdfe4;padding:5px;text-align:left}th{background:#eef0f3}
+img{max-width:100%;height:auto}.imgs{display:flex;flex-wrap:wrap;gap:10px}.imgs img{flex:1 1 260px;min-width:0}
+footer{text-align:center;font-size:.78rem;color:#777;padding:14px}
+</style></head><body>
+<header><h1>Delivery Time Prediction</h1><p>Machine Learning Project | Saurabh Charbhare</p></header>
+<main>
+<section><h2>Order details</h2>
+<label for="distance_km">Distance (km)</label><input id="distance_km" type="number" step="0.1" value="5">
+<label for="prep_time_min">Food preparation time (minutes)</label><input id="prep_time_min" type="number" value="15">
+<label for="traffic">Traffic</label><select id="traffic"><option value="0">Low</option><option value="1" selected>Medium</option><option value="2">High</option></select>
+<label for="weather">Weather</label><select id="weather"><option value="0">Clear</option><option value="1">Rain</option><option value="2">Fog</option></select>
+<label for="peak_hour">Time of day</label><select id="peak_hour"><option value="0">Normal hours</option><option value="1">Peak hours</option></select>
+<label for="courier_exp_years">Delivery partner experience (years)</label><input id="courier_exp_years" type="number" value="2">
+<button type="button" onclick="predict()">Predict delivery time</button><div class="err" id="err"></div></section>
+<section><h2>Prediction</h2>
+<div class="res"><span>Estimated delivery time</span><b id="min">--</b><span id="rng"></span></div>
+<h2 style="margin-top:12px">Model used</h2>
+<p style="font-size:.85rem;margin:0">{{ m.best }} (best of 3 models). Trained on {{ m.rows }} records.</p></section>
+<section class="full"><h2>Recent predictions (saved in database)</h2>
+<table id="hist"><tr><th>Time</th><th>Km</th><th>Prep</th><th>Traffic</th><th>Weather</th><th>Peak</th><th>Result (min)</th></tr></table></section>
+<section class="full"><h2>Model comparison</h2>
+<table><tr><th>Model</th><th>MAE</th><th>RMSE</th><th>R2</th><th>CV MAE</th></tr>
+{% for n, r in m.results.items() %}<tr><td>{{ n }}</td><td>{{ r.MAE }}</td><td>{{ r.RMSE }}</td><td>{{ r.R2 }}</td><td>{{ r.CV_MAE }}</td></tr>{% endfor %}</table>
+<div class="imgs" style="margin-top:12px"><img src="/static/model_comparison.png" alt="Model comparison"><img src="/static/feature_importance.png" alt="Feature importance"><img src="/static/actual_vs_predicted.png" alt="Actual vs predicted"></div></section>
+</main><footer>Machine Learning Project | Saurabh Charbhare</footer>
+<script>
+var F=["distance_km","prep_time_min","traffic","weather","peak_hour","courier_exp_years"];
+function predict(){
+  var d={},i;for(i=0;i<F.length;i++){d[F[i]]=document.getElementById(F[i]).value;}
+  fetch("/api/predict",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)})
+  .then(function(r){return r.json();}).then(function(j){
+    if(j.error){document.getElementById("err").innerHTML=j.error;return;}
+    document.getElementById("err").innerHTML="";
+    document.getElementById("min").innerHTML=Math.round(j.minutes)+" min";
+    document.getElementById("rng").innerHTML="Likely range: "+j.low+" to "+j.high+" minutes";
+    history();});
+}
+function history(){
+  fetch("/api/history").then(function(r){return r.json();}).then(function(rows){
+    var t=document.getElementById("hist"),h="<tr><th>Time</th><th>Km</th><th>Prep</th><th>Traffic</th><th>Weather</th><th>Peak</th><th>Result (min)</th></tr>",i,r;
+    var T=["Low","Medium","High"],W=["Clear","Rain","Fog"];
+    for(i=0;i<rows.length;i++){r=rows[i];h+="<tr><td>"+r[0]+"</td><td>"+r[1]+"</td><td>"+r[2]+"</td><td>"+T[r[3]]+"</td><td>"+W[r[4]]+"</td><td>"+(r[5]?"Yes":"No")+"</td><td>"+r[6]+"</td></tr>";}
+    t.innerHTML=h;});
+}
+window.onload=function(){history();};
+</script></body></html>
