@@ -3,7 +3,7 @@ import os, json, sqlite3, joblib, pandas as pd
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".")
 saved = joblib.load("model.joblib"); MODEL, COLS = saved["model"], saved["columns"]
 METRICS = json.load(open("metrics.json"))
 ERR = METRICS["results"][METRICS["best"]]["MAE"]
@@ -20,7 +20,7 @@ def db():
 
 @app.route("/")
 def home():
-    return render_template("index.html", m=METRICS)
+    return render_template("dashboard.html", m=METRICS)
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
