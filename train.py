@@ -1,7 +1,8 @@
 """Train and compare 3 models, save best model, metrics and charts.
 Usage:  python train.py                 (uses delivery_data.csv)
         python train.py my_real.csv     (real dataset: needs the same 7 column names, see README)"""
-import sys, json, joblib, numpy as np, pandas as pd
+import os, sys, json, joblib, numpy as np, pandas as pd
+os.makedirs("static", exist_ok=True)
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
