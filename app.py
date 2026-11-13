@@ -1,4 +1,4 @@
-"""Flask backend with REST API and SQLite history.   python app.py  ->  http://127.0.0.1:5000"""
+y"""Flask backend with REST API and SQLite history.   python app.py  ->  http://127.0.0.1:5000"""
 import os, json, sqlite3, joblib, pandas as pd
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template
@@ -25,6 +25,13 @@ def add_cors(resp):
     resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return resp
 
+@app.after_request
+def add_cors(resp):
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return resp
+          
 @app.route("/")
 def home():
     return render_template("dashboard.html", m=METRICS)
